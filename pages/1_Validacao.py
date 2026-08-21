@@ -3,7 +3,7 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
-from src.queries import grade_validacao, listar_filiais, marcar_presenca, pendentes_todas_filiais
+from src.queries import ausentes_todas_filiais, grade_validacao, listar_filiais, marcar_presenca
 from src.style import STATUS_STYLE, inject
 
 st.set_page_config(page_title="Validacao de Presenca", page_icon="✅", layout="wide")
@@ -11,7 +11,10 @@ inject(st)
 
 st.markdown('<span class="bp-eyebrow">Planta &middot; Controle de presenca</span>', unsafe_allow_html=True)
 st.title("✅ Validacao de Presenca")
-st.caption("Mapa por setor — clique em presente/ausente para validar cada colaborador.")
+st.caption(
+    "Cada cadeira representa um vendedor — todos comecam o dia marcados como presentes. "
+    "Clique na cadeira de quem **nao veio** para desmarcar."
+)
 
 filiais_df = listar_filiais()
 col_a, col_b = st.columns([2, 1])
@@ -32,13 +35,11 @@ if df.empty:
 total = len(df)
 presentes = (df["status"] == "presente").sum()
 ausentes = (df["status"] == "ausente").sum()
-pendentes = (df["status"] == "pendente").sum()
 
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("Total", total)
+m1, m2, m3 = st.columns(3)
+m1.metric("Total de cadeiras", total)
 m2.metric("🟢 Presentes", presentes)
-m3.metric("🔴 Ausentes", ausentes)
-m4.metric("⚪ Pendentes", pendentes)
+m3.metric("⚪ Ausentes (desmarcados)", ausentes)
 
 st.divider()
 
@@ -55,40 +56,49 @@ with col_floor:
             """,
             unsafe_allow_html=True,
         )
-        colunas = st.columns(3)
-        for idx, (_, linha) in enumerate(grupo.iterrows()):
+        colunas = st.columns(4)
+        legenda_linhas = []
+        for numero, (_, linha) in enumerate(grupo.iterrows(), start=1):
             estilo = STATUS_STYLE[linha["status"]]
-            with colunas[idx % 3]:
+            legenda_linhas.append(f"<b>{numero}</b> = {linha['colaborador']}")
+            with colunas[(numero - 1) % 4]:
                 with st.container(border=True):
-                    pendente_dot = (
-                        '<span class="bp-pending-dot"></span>' if linha["status"] == "pendente" else ""
+                    st.markdown(
+                        f"<div class='bp-seat-num' style=\"background:{estilo['cor']}22;"
+                        f"color:{estilo['cor']};border:2px solid {estilo['cor']}\">{numero}</div>",
+                        unsafe_allow_html=True,
                     )
                     st.markdown(
-                        f"{pendente_dot}<span class='bp-desk-name'>{linha['colaborador']}</span><br>"
-                        f"<span class='bp-desk-role'>{linha['cargo']}</span>",
+                        f"<div style='text-align:center'>"
+                        f"<span class='bp-desk-role'>{linha['cargo']}</span></div>",
                         unsafe_allow_html=True,
                     )
                     hora = (
-                        f" <span style='color:#9AA0AA;font-size:0.75em'>({linha['hora_registro']})</span>"
+                        f" <span style='color:#9AA0AA;font-size:0.72em'>({linha['hora_registro']})</span>"
                         if pd.notna(linha["hora_registro"]) else ""
                     )
                     st.markdown(
-                        f"<span class='bp-badge' style=\"background:{estilo['cor']}22;"
-                        f"color:{estilo['cor']};border:1px solid {estilo['cor']}55\">"
-                        f"{estilo['icone']} {estilo['label']}</span>{hora}",
+                        f"<div style='text-align:center'><span class='bp-badge' "
+                        f"style=\"background:{estilo['cor']}22;color:{estilo['cor']};"
+                        f"border:1px solid {estilo['cor']}55\">{estilo['icone']} {estilo['label']}</span>{hora}</div>",
                         unsafe_allow_html=True,
                     )
-                    b1, b2 = st.columns(2)
-                    if b1.button("🟢 Veio", key=f"presente_{linha['colaborador_id']}", width="stretch"):
-                        marcar_presenca(int(linha["colaborador_id"]), data_ref_str, "presente")
-                        st.rerun()
-                    if b2.button("🔴 Faltou", key=f"ausente_{linha['colaborador_id']}", width="stretch"):
-                        marcar_presenca(int(linha["colaborador_id"]), data_ref_str, "ausente")
-                        st.rerun()
+                    if linha["status"] == "presente":
+                        if st.button("Desmarcar (faltou)", key=f"toggle_{linha['colaborador_id']}", width="stretch"):
+                            marcar_presenca(int(linha["colaborador_id"]), data_ref_str, "ausente")
+                            st.rerun()
+                    else:
+                        if st.button("Marcar presente", key=f"toggle_{linha['colaborador_id']}", width="stretch"):
+                            marcar_presenca(int(linha["colaborador_id"]), data_ref_str, "presente")
+                            st.rerun()
+        st.markdown(
+            f"<div class='bp-legend-list'>{' &nbsp;&middot;&nbsp; '.join(legenda_linhas)}</div>",
+            unsafe_allow_html=True,
+        )
         st.markdown("</div>", unsafe_allow_html=True)
 
 with col_sidebar:
-    st.markdown('<span class="bp-eyebrow">Legenda</span>', unsafe_allow_html=True)
+    st.markdown('<span class="bp-eyebrow">Legenda de status</span>', unsafe_allow_html=True)
     for chave, estilo in STATUS_STYLE.items():
         st.markdown(
             f"<span class='bp-badge' style=\"background:{estilo['cor']}22;color:{estilo['cor']};"
@@ -97,27 +107,27 @@ with col_sidebar:
         )
     st.markdown("")
 
-    pend_df = pendentes_todas_filiais(data_ref_str)
+    aus_df = ausentes_todas_filiais(data_ref_str)
     st.markdown(
-        f'<span class="bp-eyebrow">Painel de avisos — todas as filiais ({len(pend_df)})</span>',
+        f'<span class="bp-eyebrow">Painel de avisos — faltas em todas as filiais ({len(aus_df)})</span>',
         unsafe_allow_html=True,
     )
-    if pend_df.empty:
+    if aus_df.empty:
         st.markdown(
-            "<div class='bp-aviso'><span class='what'>Nenhuma pendencia — todos validados hoje.</span></div>",
+            "<div class='bp-aviso'><span class='what'>Ninguem foi desmarcado ainda hoje.</span></div>",
             unsafe_allow_html=True,
         )
     else:
-        for _, row in pend_df.head(15).iterrows():
+        for _, row in aus_df.head(15).iterrows():
             st.markdown(
                 f"""<div class="bp-aviso">
                     <span class="who">{row['colaborador']}</span><br>
-                    <span class="what">{row['filial']} · {row['setor']} — pendente de validacao</span>
+                    <span class="what">{row['filial']} · {row['setor']} — nao veio hoje</span>
                     </div>""",
                 unsafe_allow_html=True,
             )
-        if len(pend_df) > 15:
-            st.caption(f"+ {len(pend_df) - 15} outras pendencias...")
+        if len(aus_df) > 15:
+            st.caption(f"+ {len(aus_df) - 15} outras faltas...")
 
 st.divider()
 

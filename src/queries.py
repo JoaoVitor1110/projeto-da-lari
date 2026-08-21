@@ -12,7 +12,11 @@ def listar_filiais() -> pd.DataFrame:
 
 
 def grade_validacao(filial_id: int, data_ref: str) -> pd.DataFrame:
-    """Retorna colaboradores da filial com o status de presenca na data_ref."""
+    """Retorna colaboradores da filial com o status de presenca na data_ref.
+
+    Por padrao todo colaborador comeca o dia marcado como presente (cadeira
+    ocupada) — o gestor desmarca (clica) quem nao veio.
+    """
     conn = get_connection()
     query = """
         SELECT
@@ -21,7 +25,7 @@ def grade_validacao(filial_id: int, data_ref: str) -> pd.DataFrame:
             c.cargo,
             s.id AS setor_id,
             s.nome AS setor,
-            COALESCE(p.status, 'pendente') AS status,
+            COALESCE(p.status, 'presente') AS status,
             p.hora_registro
         FROM colaboradores c
         JOIN setores s ON s.id = c.setor_id
@@ -45,8 +49,8 @@ def marcar_presenca(colaborador_id: int, data_ref: str, status: str) -> None:
     conn.commit()
 
 
-def pendentes_todas_filiais(data_ref: str) -> pd.DataFrame:
-    """Colaboradores ainda sem validacao (pendente) na data_ref, em todas as filiais."""
+def ausentes_todas_filiais(data_ref: str) -> pd.DataFrame:
+    """Colaboradores desmarcados (ausentes) na data_ref, em todas as filiais."""
     conn = get_connection()
     query = """
         SELECT
@@ -54,11 +58,11 @@ def pendentes_todas_filiais(data_ref: str) -> pd.DataFrame:
             s.nome AS setor,
             c.id AS colaborador_id,
             c.nome AS colaborador
-        FROM colaboradores c
+        FROM presencas p
+        JOIN colaboradores c ON c.id = p.colaborador_id
         JOIN setores s ON s.id = c.setor_id
         JOIN filiais f ON f.id = s.filial_id
-        LEFT JOIN presencas p ON p.colaborador_id = c.id AND p.data = ?
-        WHERE p.id IS NULL OR p.status = 'pendente'
+        WHERE p.data = ? AND p.status = 'ausente'
         ORDER BY f.nome, s.nome, c.nome
     """
     return pd.read_sql_query(query, conn, params=(data_ref,))

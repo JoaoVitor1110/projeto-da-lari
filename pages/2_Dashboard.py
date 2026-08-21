@@ -34,7 +34,7 @@ taxa = (presentes / total * 100) if total else 0
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Colaboradores (hoje)", total)
 c2.metric("🟢 Presentes", presentes)
-c3.metric("🔴 Ausentes", ausentes)
+c3.metric("⚪ Ausentes", ausentes)
 c4.metric("Taxa de presenca", f"{taxa:.0f}%")
 
 st.divider()
@@ -48,7 +48,7 @@ with col1:
     )
     fig = px.bar(
         por_filial, x="filial", y="qtd", color="status",
-        color_discrete_map={"presente": "#34D399", "ausente": "#FB7185", "pendente": "#64748B"},
+        color_discrete_map={"presente": "#34D399", "ausente": "#64748B"},
         barmode="stack", labels={"filial": "Filial", "qtd": "Colaboradores", "status": "Status"},
     )
     st.plotly_chart(fig, width='stretch')
@@ -58,7 +58,7 @@ with col2:
     por_setor = df_hoje.groupby(["setor", "status"]).size().reset_index(name="qtd")
     fig2 = px.bar(
         por_setor, x="setor", y="qtd", color="status",
-        color_discrete_map={"presente": "#34D399", "ausente": "#FB7185", "pendente": "#64748B"},
+        color_discrete_map={"presente": "#34D399", "ausente": "#64748B"},
         barmode="stack", labels={"setor": "Setor", "qtd": "Colaboradores", "status": "Status"},
     )
     st.plotly_chart(fig2, width='stretch')

@@ -8,11 +8,12 @@ fontes IBM Plex) — visual adaptado do mockup inicial de referencia
 ## Funcionalidades (MVP)
 
 - **Validacao** (`pages/1_Validacao.py`): mapa por setor (cada setor vira
-  uma "sala" com cantos tracejados), colaboradores como cartoes com status
-  colorido (🟢 presente / 🔴 ausente / ⚪ pendente). O gestor clica para
-  marcar presenca do dia. Painel lateral "avisos" lista as pendencias de
-  **todas** as filiais, nao so a selecionada. Botao para emitir o
-  relatorio do dia em CSV.
+  uma "sala" com cantos tracejados). Cada cadeira numerada representa um
+  vendedor, com uma legenda abaixo mapeando numero → nome. Todo mundo
+  comeca o dia marcado como **presente** — o gestor so precisa clicar para
+  **desmarcar** quem nao veio (clique de novo para reverter). Painel
+  lateral "avisos" lista as faltas de **todas** as filiais, nao so a
+  selecionada. Botao para emitir o relatorio do dia em CSV.
 - **Dashboard** (`pages/2_Dashboard.py`): metricas e graficos de presenca
   por filial e setor, alem da evolucao da taxa de presenca nos ultimos dias.
 - Dados de exemplo (3 filiais, 5 setores cada, 30 colaboradores e historico

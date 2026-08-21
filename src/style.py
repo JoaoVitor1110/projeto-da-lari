@@ -1,7 +1,6 @@
 STATUS_STYLE = {
     "presente": {"cor": "#34D399", "label": "Presente", "icone": "🟢"},
-    "ausente": {"cor": "#FB7185", "label": "Ausente", "icone": "🔴"},
-    "pendente": {"cor": "#64748B", "label": "Pendente", "icone": "⚪"},
+    "ausente": {"cor": "#64748B", "label": "Ausente", "icone": "⚪"},
 }
 
 BLUEPRINT_CSS = """
@@ -61,9 +60,20 @@ html, body, [class*="css"] { font-family:'IBM Plex Sans', system-ui, sans-serif;
 }
 .bp-pending-dot{
   display:inline-block; width:8px; height:8px; border-radius:50%;
-  background:var(--atestado); margin-right:6px;
-  box-shadow:0 0 0 2px rgba(251,113,133,0.25);
+  background:var(--inativo); margin-right:6px;
+  box-shadow:0 0 0 2px rgba(100,116,139,0.25);
 }
+.bp-seat-num{
+  width:34px; height:34px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono', monospace; font-weight:700; font-size:13px;
+  margin:0 auto 4px auto;
+}
+.bp-legend-list{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);
+  line-height:1.9; margin-top:2px;
+}
+.bp-legend-list b{ color:var(--ink); font-weight:600; }
 .bp-aviso{
   background:var(--panel); border:1px solid var(--line-strong); border-left:3px solid var(--atestado);
   border-radius:6px; padding:8px 10px; font-size:12.5px; margin-bottom:8px;

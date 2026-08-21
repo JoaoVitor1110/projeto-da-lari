@@ -17,9 +17,10 @@ st.markdown(
     """
 Use o menu lateral para navegar:
 
-- **Validacao** — mapa visual dos colaboradores por setor (estilo planta baixa), separados por filial.
-  Clique em presente/ausente para validar. Um painel lateral mostra as pendencias de todas as filiais.
-  Emita o relatorio do dia ao final.
+- **Validacao** — mapa visual por setor (estilo planta baixa), separado por filial. Cada cadeira
+  numerada representa um vendedor (legenda abaixo mostra quem e quem) e comeca o dia marcada
+  como presente — o gestor so precisa desmarcar quem nao veio. Um painel lateral mostra as
+  faltas de todas as filiais. Emita o relatorio do dia ao final.
 - **Dashboard** — visao consolidada de presenca por filial, setor e nos ultimos dias.
 
 Este e um protótipo com dados fictícios para validação do conceito com o gestor.
